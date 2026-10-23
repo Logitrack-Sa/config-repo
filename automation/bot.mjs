@@ -90,8 +90,7 @@ export function safeDiagnostic(error) {
   return 'REVIEW_FAILED';
 }
 
-export async function trustedActor(github, association, login) {
-  if (TRUSTED.includes(association)) return true;
+export async function trustedActor(github, login) {
   if (!login) return false;
   try {
     const { permission } = await github.get(`/collaborators/${encodeURIComponent(login)}/permission`);
@@ -113,7 +112,7 @@ export async function runBot({ github, event, eventName, ask = askModel }) {
     if (event.comment?.user?.type === 'Bot') return;
     const parsed = command(event.comment?.body);
     if (!parsed) return;
-    if (!await trustedActor(github, event.comment?.author_association, event.comment?.user?.login)) return;
+    if (!await trustedActor(github, event.comment?.user?.login)) return;
     if (parsed[0] === 'status') {
       const item = await github.get(`/issues/${number}`);
       if (item.pull_request || item.state !== 'open') return;
@@ -131,12 +130,13 @@ export async function runBot({ github, event, eventName, ask = askModel }) {
   } else if (eventName === 'pull_request_target') {
     const pull = await github.get(`/pulls/${number}`);
     if (pull.user?.type === 'Bot') return;
-    if (!TRUSTED.includes(event.pull_request?.author_association) && !await trustedActor(github, pull.author_association, pull.user?.login)) {
+    if (!await trustedActor(github, pull.user?.login)) {
       console.log('Revisión omitida: autor sin permiso de escritura verificado.'); return;
     }
     await syncPull(github, number);
     review = ['opened','reopened','synchronize','ready_for_review','edited'].includes(event.action);
   } else if (eventName === 'workflow_dispatch') {
+    if (!await trustedActor(github, event.sender?.login)) return;
     const item = await github.get(`/issues/${number}`);
     if (!item.pull_request) throw new Error('La revisión manual requiere un PR.');
     review = true;
