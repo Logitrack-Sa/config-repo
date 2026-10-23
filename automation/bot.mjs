@@ -81,13 +81,22 @@ export async function syncPull(github, number) {
   }
 }
 
+export async function trustedActor(github, association, login) {
+  if (TRUSTED.includes(association)) return true;
+  if (!login) return false;
+  try {
+    const { permission } = await github.get(`/collaborators/${encodeURIComponent(login)}/permission`);
+    return ['admin','maintain','write'].includes(permission);
+  } catch { return false; }
+}
+
 export async function runBot({ github, event, eventName, ask = askModel }) {
   const number = event.issue?.number || event.pull_request?.number || Number(event.inputs?.number);
   if (!Number.isSafeInteger(number) || number < 1) throw new Error('Número de issue/PR inválido.');
   console.log(`Evento de revisión: ${eventName}; acción: ${event.action || 'manual'}; número: ${number}`);
   let review = false;
   if (eventName === 'issue_comment') {
-    if (event.comment?.user?.type === 'Bot' || !TRUSTED.includes(event.comment?.author_association)) return;
+    if (event.comment?.user?.type === 'Bot' || !await trustedActor(github, event.comment?.author_association, event.comment?.user?.login)) return;
     const parsed = command(event.comment?.body);
     if (!parsed) return;
     if (parsed[0] === 'status') {
@@ -107,10 +116,8 @@ export async function runBot({ github, event, eventName, ask = askModel }) {
   } else if (eventName === 'pull_request_target') {
     const pull = await github.get(`/pulls/${number}`);
     console.log(`Asociación visible del autor: ${pull.author_association}`);
-    if (!TRUSTED.includes(pull.author_association) && !TRUSTED.includes(event.pull_request?.author_association)) {
-      let permission;
-      try { permission = (await github.get(`/collaborators/${encodeURIComponent(pull.user?.login || '')}/permission`)).permission; } catch {}
-      if (!['admin','maintain','write'].includes(permission)) { console.log('Revisión omitida: autor sin permiso de escritura verificado.'); return; }
+    if (!TRUSTED.includes(event.pull_request?.author_association) && !await trustedActor(github, pull.author_association, pull.user?.login)) {
+      console.log('Revisión omitida: autor sin permiso de escritura verificado.'); return;
     }
     await syncPull(github, number);
     review = ['opened','reopened','synchronize','ready_for_review','edited'].includes(event.action);
