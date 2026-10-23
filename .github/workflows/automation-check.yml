@@ -1,0 +1,22 @@
+name: Validar automatización
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  automation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Verificar sintaxis y casos del revisor
+        run: |
+          for file in automation/*.mjs; do node --check "$file"; done
+          node --test automation/test/*.test.mjs

@@ -1,0 +1,30 @@
+name: Tarea Sprint 2
+description: Trabajo con criterios comprobables y desarrollo paralelo
+title: "[S2] "
+labels: ["sprint:2", "status:backlog"]
+body:
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo y alcance
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación y pruebas
+    validations:
+      required: true
+  - type: textarea
+    id: paralelo
+    attributes:
+      label: Contrato, fixtures y forma de empezar sin esperar otro servicio
+    validations:
+      required: true
+  - type: input
+    id: puntos
+    attributes:
+      label: Estimación Fibonacci y responsable
+      placeholder: "3 puntos; @usuario"
+    validations:
+      required: true
