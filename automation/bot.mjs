@@ -115,6 +115,7 @@ export async function runBot({ github, event, eventName, ask = askModel }) {
     return;
   } else if (eventName === 'pull_request_target') {
     const pull = await github.get(`/pulls/${number}`);
+    if (pull.user?.type === 'Bot') return;
     console.log(`Asociación visible del autor: ${pull.author_association}`);
     if (!TRUSTED.includes(event.pull_request?.author_association) && !await trustedActor(github, pull.author_association, pull.user?.login)) {
       console.log('Revisión omitida: autor sin permiso de escritura verificado.'); return;
