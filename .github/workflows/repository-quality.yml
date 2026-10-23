@@ -1,0 +1,24 @@
+name: Calidad del repositorio
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  repository:
+    name: Markdown y estructura
+    runs-on: ubuntu-latest
+    outputs:
+      maven: ${{ steps.structure.outputs.maven }}
+      docker: ${{ steps.structure.outputs.docker }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - id: structure
+        run: node .github/scripts/check_repository.mjs
