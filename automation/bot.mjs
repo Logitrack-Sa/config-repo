@@ -81,13 +81,28 @@ export async function syncPull(github, number) {
   }
 }
 
+export function safeDiagnostic(error) {
+  if (error?.code === 'PERMISSION_LOOKUP_FAILED') return 'PERMISSION_LOOKUP_FAILED';
+  const message = typeof error?.message === 'string' ? error.message : '';
+  const http = message.match(/^GitHub (?:GET|POST|PATCH|PUT) \S+: HTTP ([45]\d{2})$/);
+  if (http) return `GITHUB_HTTP_${http[1]}`;
+  if (message.startsWith('La consulta a la IA falló') || message.startsWith('La IA excedió')) return 'COPILOT_FAILED';
+  return 'REVIEW_FAILED';
+}
+
 export async function trustedActor(github, association, login) {
   if (TRUSTED.includes(association)) return true;
   if (!login) return false;
   try {
     const { permission } = await github.get(`/collaborators/${encodeURIComponent(login)}/permission`);
     return ['admin','maintain','write'].includes(permission);
-  } catch { return false; }
+  } catch (error) {
+    // 404 significa que no hay un colaborador consultable; otros fallos son operativos.
+    if (typeof error?.message === 'string' && error.message.endsWith(': HTTP 404')) return false;
+    const failure = new Error('No se pudo verificar el permiso del actor; reintentar la ejecución.');
+    failure.code = 'PERMISSION_LOOKUP_FAILED';
+    throw failure;
+  }
 }
 
 export async function runBot({ github, event, eventName, ask = askModel }) {
@@ -132,7 +147,7 @@ export async function runBot({ github, event, eventName, ask = askModel }) {
     await syncPull(github, number);
     return await reviewPull(github, number, ask);
   } catch (error) {
-    console.error(error.message); // Mensajes sanitizados por GitHub/model, nunca stderr/prompt/token.
+    console.error(safeDiagnostic(error));
     await github.replaceLabels(number, 'ai:', ['ai:unavailable']);
     await github.comment(number, '<!-- ai-configuration -->',
       '## Revisión IA no disponible\n\nNo se completó el análisis; no equivale a una aprobación. Revisar acceso Copilot/políticas de la organización o secreto COPILOT_GITHUB_TOKEN. ' +
@@ -148,7 +163,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     github = new GitHub();
     await runBot({ github, event, eventName: process.env.GITHUB_EVENT_NAME });
   } catch (error) {
-    console.error(error.message); process.exitCode = 1;
+    console.error(safeDiagnostic(error)); process.exitCode = 1;
   } finally {
     if (github && github.changedStatuses.size) {
       if (!process.env.PROJECT_TOKEN) {

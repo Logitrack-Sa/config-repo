@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {command,closingNumbers,validateReview} from '../policy.mjs';
-import {runBot,reviewPull,syncPull} from '../bot.mjs';
+import {runBot,reviewPull,syncPull,safeDiagnostic} from '../bot.mjs';
 import {statusOption} from '../projects.mjs';
 class Memory {
  constructor(){this.repo='Logitrack-Sa/demo';this.changedStatuses=new Set();this.issue={number:1,state:'open',labels:[]};this.pull={number:2,state:'open',draft:false,merged:false,head:{sha:'abc'},html_url:'https://github.com/Logitrack-Sa/demo/pull/2',body:'Closes #1',author_association:'COLLABORATOR',title:'Cambio'};this.files=[{filename:'a.java',patch:'@@ -1 +1 @@\n-old\n+new'}];this.statuses=[];this.comments=[];this.labels=[];}
@@ -34,3 +34,6 @@ test('comando review funciona para miembro privado con permiso write',async()=>{
 test('comando de usuario sin permisos no consume el modelo',async()=>{const g=new Memory();g.get=async()=>({permission:'read'});await runBot({github:g,eventName:'issue_comment',event:{issue:{number:2,pull_request:{}},comment:{user:{type:'User',login:'external'},author_association:'CONTRIBUTOR',body:'/review'}},ask:()=>assert.fail('No modelo')});assert.equal(g.comments.length,0);});
 
 test('PR de bot no consume IA aunque tenga asociación o permiso confiable',async()=>{for(const association of ['MEMBER','CONTRIBUTOR']){const g=new Memory();g.pull.user={type:'Bot',login:'automation[bot]'};g.pull.author_association=association;const original=g.get.bind(g);g.get=async p=>p.includes('/collaborators/')?{permission:'write'}:original(p);await runBot({github:g,eventName:'pull_request_target',event:{action:'opened',pull_request:{number:2,author_association:association}},ask:()=>assert.fail('No modelo')});assert.equal(g.comments.length,0);assert.equal(g.labels.length,0);}});
+
+test('diagnóstico no divulga mensajes arbitrarios, URLs ni tokens',()=>{for(const message of ['ghp_test_not_a_real_secret','https://example.test/?token=private','Unexpected JSON: private data'])assert.equal(safeDiagnostic(new Error(message)),'REVIEW_FAILED');assert.equal(safeDiagnostic(new Error('GitHub GET /issues/1: HTTP 503')),'GITHUB_HTTP_503');});
+test('fallo operativo al verificar permisos es explícito y no consume IA',async()=>{for(const suffix of ['HTTP 403','HTTP 429','HTTP 500','timeout']){const g=new Memory();g.get=async()=>{throw Error('GitHub GET /permission: '+suffix)};await assert.rejects(runBot({github:g,eventName:'issue_comment',event:{issue:{number:2,pull_request:{}},comment:{user:{type:'User',login:'member'},author_association:'CONTRIBUTOR',body:'/review'}},ask:()=>assert.fail('No modelo')}),error=>error.code==='PERMISSION_LOOKUP_FAILED');assert.equal(g.comments.length,0);assert.equal(g.labels.length,0);}});
