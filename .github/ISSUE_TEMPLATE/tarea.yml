@@ -2,6 +2,7 @@ name: Tarea Sprint 2
 description: Trabajo con criterios comprobables y desarrollo paralelo
 title: "[S2] "
 labels: ["sprint:2", "status:backlog"]
+projects: ["Logitrack-Sa/2"]
 body:
   - type: textarea
     id: objetivo
