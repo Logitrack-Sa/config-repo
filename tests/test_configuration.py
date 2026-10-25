@@ -55,6 +55,7 @@ class ConfigurationContractTest(unittest.TestCase):
         for key,var in (("base","FEE_BASE"),("price-per-kg","FEE_PRICE_PER_KG"),("volumetric-divisor","FEE_VOLUMETRIC_DIVISOR")):
             self.assertEqual("${"+var+"}",config["logitrack.fee."+key])
         self.assertEqual("${COURIER_SERVICE_URL}",config["logitrack.courier.base-url"])
+        self.assertEqual("${JWT_TTL}",merged("security-service","prod")["logitrack.security.token-ttl"])
 
     def test_no_private_material_or_credential_defaults(self):
         for path in ROOT.glob("*.properties"):

@@ -25,7 +25,7 @@ SERVER_PORT permite sobreescribir cada puerto; coordinar cualquier cambio con la
 | FEE_BASE, FEE_PRICE_PER_KG, FEE_VOLUMETRIC_DIVISOR | Tarifas shipment; obligatorias en prod, valores públicos de prueba en dev |
 | JWT_PUBLIC_KEY_LOCATION, JWT_KEY_ID, JWT_ISSUER, JWT_AUDIENCE | Contrato de verificación local; clave pública montada, ID y emisor/audiencia acordados |
 | JWT_PRIVATE_KEY_LOCATION | Solo emisor security; ruta al montaje privado, nunca PEM en Git |
-| JWT_TTL | Solo emisor security; duración ISO-8601, PT15M inicial |
+| JWT_TTL | Solo emisor security; duración ISO-8601, PT15M inicial en dev y obligatoria en prod |
 | SERVER_PORT | Opcional; puerto HTTP de cada aplicación |
 
 DB_USERNAME es el nombre del contrato distribuido; DB_USER pertenece al arranque histórico del Sprint 1. Las propiedades exactas del cliente shipment son logitrack.courier.base-url y logitrack.security.*; no usar logitrack.courier-service.url.
