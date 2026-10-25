@@ -12,8 +12,27 @@ La IA devuelve hallazgos sobre PR y sugerencias de pruebas; no planifica, no apr
 
 No incorporar credenciales, claves JWT privadas ni archivos .env. Java25 para aplicaciones; config-repo es únicamente Git de propiedades no sensibles dev/prod.
 
-## Estructura a implementar
+## Estructura de Archivos e Implementación
 
-Este repositorio contendrá propiedades por servicio y ambiente dev/prod. La precedencia entre archivos comunes y específicos y los nombres exactos de variables se documentarán en su issue antes de integrar consumidores.
+Este repositorio contiene las propiedades externalizadas por servicio y ambiente (`dev`/`prod`):
 
-Externalizar puertos, nombres de aplicación, MySQL, URLs internas, logging y seguridad no sensible. Credenciales de base, clave privada JWT y cuentas administrativas se reciben por entorno o montajes, nunca como valores reales en Git. El bootstrap del cliente conserva el nombre necesario para localizar su configuración. No contiene aplicación Java ni requiere imagen Docker propia.
+* `shipment-service.properties` (Configuración base)
+* `shipment-service-dev.properties` (Desarrollo / Docker Compose)
+* `shipment-service-prod.properties` (Producción)
+* `courier-service.properties` (Configuración base)
+* `courier-service-dev.properties` (Desarrollo / Docker Compose)
+* `courier-service-prod.properties` (Producción)
+* `security-service.properties` (Configuración base)
+* `security-service-dev.properties` (Desarrollo / Docker Compose)
+* `security-service-prod.properties` (Producción)
+
+---
+
+## Contrato de Variables y Placeholders
+
+Externalizar puertos, nombres de aplicación, bases de datos MySQL, URLs internas, logging y seguridad no sensible.
+
+### Reglas del Contrato:
+1. **Cero Secretos en Git:** Las credenciales de base de datos (`${DB_USER}`, `${DB_PASSWORD}`), clave privada JWT y cuentas administrativas se reciben estrictamente por entorno o montajes en los contenedores, nunca como valores reales en Git.
+2. **Nombres DNS de Compose:** En los perfiles `dev`, las conexiones entre contenedores y bases de datos utilizan nombres de red de Docker Compose (ej: `shipment-db`, `courier-db`, `security-db`) **nunca `localhost` intercontenedor**.
+3. **Perfiles Dinámicos:** En producción (`prod`), los hosts, puertos y parámetros de infraestructura se inyectan de forma completamente dinámica mediante variables de entorno del sistema operativo u orquestador.
