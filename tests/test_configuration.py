@@ -19,6 +19,35 @@ def merged(service, profile):
     return properties(ROOT/f"{service}.properties") | properties(ROOT/f"{service}-{profile}.properties")
 
 class ConfigurationContractTest(unittest.TestCase):
+    def test_gateway_has_base_configuration_for_mandatory_bootstrap(self):
+        config = properties(ROOT/'api-gateway.properties')
+        self.assertEqual('api-gateway', config['spring.application.name'])
+        self.assertEqual('${SERVER_PORT:8080}', config['server.port'])
+        self.assertEqual('health', config['management.endpoints.web.exposure.include'])
+        self.assertEqual('never', config['management.endpoint.health.show-details'])
+        self.assertFalse(any(key.startswith('spring.datasource') for key in config))
+
+    def test_eureka_is_standalone_without_database_or_self_registration(self):
+        for profile in ('dev', 'prod'):
+            config = merged('eureka-server', profile)
+            self.assertEqual('${SERVER_PORT:8065}', config['server.port'])
+            self.assertEqual('false', config['eureka.client.register-with-eureka'])
+            self.assertEqual('false', config['eureka.client.fetch-registry'])
+            self.assertFalse(any(key.startswith('spring.datasource') for key in config))
+            self.assertEqual('health', config['management.endpoints.web.exposure.include'])
+
+    def test_sprint3_discovery_preserves_the_sprint2_profiles(self):
+        for service in (*SERVICES, 'api-gateway'):
+            config = properties(ROOT/f'{service}-sprint3.properties')
+            self.assertEqual('true', config['eureka.client.enabled'])
+            self.assertEqual('true', config['eureka.client.register-with-eureka'])
+            self.assertEqual('${EUREKA_SERVER_URL}',
+                             config['eureka.client.service-url.defaultZone'])
+            self.assertEqual('${SERVICE_HOST}', config['eureka.instance.hostname'])
+        config = merged('shipment-service', 'prod') | properties(ROOT/'shipment-service-sprint3.properties')
+        self.assertEqual('', config['logitrack.courier.base-url'])
+        self.assertEqual('courier-service', config['logitrack.courier.service-id'])
+
     def test_six_profiles_and_ports_are_consistent(self):
         for service, port in SERVICES.items():
             for profile in ("dev", "prod"):
