@@ -41,9 +41,9 @@ class ConfigurationContractTest(unittest.TestCase):
             config = properties(ROOT/f'{service}-sprint3.properties')
             self.assertEqual('true', config['eureka.client.enabled'])
             self.assertEqual('true', config['eureka.client.register-with-eureka'])
-            self.assertEqual('${EUREKA_SERVER_URL:http://localhost:8065/eureka/}',
+            self.assertEqual('${EUREKA_SERVER_URL}',
                              config['eureka.client.service-url.defaultZone'])
-            self.assertEqual('${SERVICE_HOST:localhost}', config['eureka.instance.hostname'])
+            self.assertEqual('${SERVICE_HOST}', config['eureka.instance.hostname'])
         config = merged('shipment-service', 'prod') | properties(ROOT/'shipment-service-sprint3.properties')
         self.assertEqual('', config['logitrack.courier.base-url'])
         self.assertEqual('courier-service', config['logitrack.courier.service-id'])

@@ -9,7 +9,8 @@ Los perfiles dev/prod del Sprint 2 conservan sus contratos.
 
 `EUREKA_SERVER_URL=http://eureka-server:8065/eureka/` identifica el registro;
 `SERVICE_HOST` anuncia el DNS del propio contenedor. No anunciar localhost dentro
-de Docker. Las claves JWT y las bases siguen perteneciendo a cada servicio.
+de Docker. Ambas variables son obligatorias en sprint3: no hay fallback a
+localhost que oculte un despliegue incompleto. Las claves JWT y las bases siguen perteneciendo a cada servicio.
 
 El perfil shipment-sprint3 deja vacia `logitrack.courier.base-url` para que el
 cliente Feign de #84 resuelva `courier-service` con Eureka y LoadBalancer.
