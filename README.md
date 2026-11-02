@@ -14,7 +14,9 @@ de Docker. Las claves JWT y las bases siguen perteneciendo a cada servicio.
 El perfil shipment-sprint3 deja vacia `logitrack.courier.base-url` para que el
 cliente Feign de #84 resuelva `courier-service` con Eureka y LoadBalancer.
 No es una URL de fallback: mantenerla vacia evita puentear el descubrimiento.
-El archivo de api-gateway solo aporta registro; las rutas/JWT/CORS corresponden
+La base api-gateway.properties permite la consulta inicial del perfil default
+que realiza Config Client antes de cargar sprint3. Define identidad, puerto y
+salud sin detalles internos. Sus archivos solo aportan bootstrap y registro; las rutas/JWT/CORS corresponden
 a las issues #81-#83 y a su responsable.
 
 Propiedades de los tres clientes del Sprint 2. Continúa la entrega de Damián fusionada en PR #4, issue #1: alinea nombres con el código de shipment y conserva puertos en dev/prod. Este repositorio no es una aplicación ni contiene secretos.

@@ -19,6 +19,14 @@ def merged(service, profile):
     return properties(ROOT/f"{service}.properties") | properties(ROOT/f"{service}-{profile}.properties")
 
 class ConfigurationContractTest(unittest.TestCase):
+    def test_gateway_has_base_configuration_for_mandatory_bootstrap(self):
+        config = properties(ROOT/'api-gateway.properties')
+        self.assertEqual('api-gateway', config['spring.application.name'])
+        self.assertEqual('${SERVER_PORT:8080}', config['server.port'])
+        self.assertEqual('health', config['management.endpoints.web.exposure.include'])
+        self.assertEqual('never', config['management.endpoint.health.show-details'])
+        self.assertFalse(any(key.startswith('spring.datasource') for key in config))
+
     def test_eureka_is_standalone_without_database_or_self_registration(self):
         for profile in ('dev', 'prod'):
             config = merged('eureka-server', profile)
