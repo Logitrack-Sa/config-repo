@@ -8,6 +8,7 @@ Cada servicio tiene un archivo base SERVICE.properties y dos overrides SERVICE-d
 
 | Cliente | Puerto inicial en dev y prod | MySQL DNS en dev |
 |---|---|---|
+| api-gateway | 8080 | N/A (sin base de datos, perimetral) |
 | shipment-service | 8081 | shipment-db:3306/shipment_db |
 | courier-service | 8082 | courier-db:3306/courier_db |
 | security-service | 8083 | security-db:3306/security_db |
@@ -18,6 +19,7 @@ SERVER_PORT permite sobreescribir cada puerto; coordinar cualquier cambio con la
 
 | Variable | Uso |
 |---|---|
+| CORS_ALLOWED_ORIGINS | Orígenes autorizados en api-gateway para CORS (Sprint 3) |
 | DB_URL | URL JDBC propia; obligatoria en prod, override del DNS por defecto en dev |
 | DB_USERNAME, DB_PASSWORD | Cuenta de aplicación y contraseña obligatorias; no root |
 | COURIER_SERVICE_URL | Solo shipment; en dev http://courier-service:8082, obligatoria en prod |

@@ -76,5 +76,21 @@ class ConfigurationContractTest(unittest.TestCase):
                 self.assertEqual("never",config["management.endpoint.health.show-details"])
                 self.assertEqual("never",config["management.endpoint.health.show-components"])
 
+    def test_api_gateway_configuration_and_cors(self):
+        for profile in ("dev", "prod"):
+            config = merged("api-gateway", profile)
+            self.assertEqual("api-gateway", config["spring.application.name"])
+            self.assertEqual("${SERVER_PORT:8080}", config["server.port"])
+            self.assertIn("gateway", config["management.endpoints.web.exposure.include"])
+            self.assertIn("logitrack.gateway.cors.allowed-origins", config)
+            self.assertEqual("GET,POST,PUT,DELETE,PATCH,OPTIONS", config["logitrack.gateway.cors.allowed-methods"])
+            self.assertEqual("true", config["logitrack.gateway.cors.allow-credentials"])
+            self.assertEqual("3600", config["logitrack.gateway.cors.max-age"])
+        dev_config = merged("api-gateway", "dev")
+        self.assertIn("localhost:8065", dev_config["eureka.client.service-url.defaultZone"])
+        prod_config = merged("api-gateway", "prod")
+        self.assertIn("eureka-server:8065", prod_config["eureka.client.service-url.defaultZone"])
+        self.assertIn("https://logitrack.com", prod_config["logitrack.gateway.cors.allowed-origins"])
+
 if __name__ == "__main__":
     unittest.main()
