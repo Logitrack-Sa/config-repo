@@ -23,7 +23,8 @@ class ConfigurationContractTest(unittest.TestCase):
         config = properties(ROOT/'api-gateway.properties')
         self.assertEqual('api-gateway', config['spring.application.name'])
         self.assertEqual('${SERVER_PORT:8080}', config['server.port'])
-        self.assertEqual('health', config['management.endpoints.web.exposure.include'])
+        self.assertIn('health', config['management.endpoints.web.exposure.include'])
+        self.assertIn('prometheus', config['management.endpoints.web.exposure.include'])
         self.assertEqual('never', config['management.endpoint.health.show-details'])
         self.assertFalse(any(key.startswith('spring.datasource') for key in config))
 
@@ -101,7 +102,10 @@ class ConfigurationContractTest(unittest.TestCase):
         for service in SERVICES:
             for profile in ("dev","prod"):
                 config=merged(service,profile)
-                self.assertEqual("health",config["management.endpoints.web.exposure.include"])
+                self.assertIn("health", config["management.endpoints.web.exposure.include"])
+                self.assertNotIn("env", config["management.endpoints.web.exposure.include"])
+                self.assertNotIn("beans", config["management.endpoints.web.exposure.include"])
+                self.assertNotIn("shutdown", config["management.endpoints.web.exposure.include"])
                 self.assertEqual("never",config["management.endpoint.health.show-details"])
                 self.assertEqual("never",config["management.endpoint.health.show-components"])
 
@@ -110,7 +114,8 @@ class ConfigurationContractTest(unittest.TestCase):
             config = merged("api-gateway", profile)
             self.assertEqual("api-gateway", config["spring.application.name"])
             self.assertEqual("${SERVER_PORT:8080}", config["server.port"])
-            self.assertEqual("health", config["management.endpoints.web.exposure.include"])
+            self.assertIn("health", config["management.endpoints.web.exposure.include"])
+            self.assertIn("prometheus", config["management.endpoints.web.exposure.include"])
             self.assertEqual("none", config["management.endpoint.gateway.access"])
             self.assertEqual("false", config["spring.cloud.gateway.server.webflux.discovery.locator.enabled"])
             self.assertEqual("${JWT_PUBLIC_KEY_LOCATION}", config["logitrack.security.jwt.public-key-location"])
