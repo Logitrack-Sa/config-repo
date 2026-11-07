@@ -61,3 +61,11 @@ Cada cliente mantiene bootstrap mínimo local: spring.application.name, SPRING_P
 `python -m unittest discover -s tests -v` valida las seis combinaciones, nombres consumidos, precedencia, puertos, DNS y ausencia de valores secretos o defaults de credenciales. GitHub Actions ejecuta lo mismo sin secretos ni permisos de escritura. La prueba del Config Server usa Git temporal independiente; estas propiedades no prueban una integración distribuida completa.
 
 [Contratos](https://github.com/Logitrack-Sa/shipment-service/blob/main/docs/sprint2/CONTRATOS-V1.md) · [Tablero](https://github.com/orgs/Logitrack-Sa/projects/2).
+
+## Chatbot — Sprint 4 (#103)
+
+`chatbot-service.properties` habilita puerto 8084, Eureka como CHATBOT-SERVICE,
+validación local con `JWT_PUBLIC_KEY_LOCATION` y audiencia `chatbot-service`.
+No configura MySQL ni credenciales de administrador. `AI_API_KEY` y `AI_MODEL`
+se inyectan en el proceso cliente, nunca se guardan aquí. El endpoint del proveedor
+es configurable mediante `AI_BASE_URL` y `AI_COMPLETIONS_PATH`.
