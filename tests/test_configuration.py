@@ -19,6 +19,17 @@ def merged(service, profile):
     return properties(ROOT/f"{service}.properties") | properties(ROOT/f"{service}-{profile}.properties")
 
 class ConfigurationContractTest(unittest.TestCase):
+    def test_chatbot_is_stateless_with_user_jwt_and_external_ai_credentials(self):
+        config = properties(ROOT / 'chatbot-service.properties')
+        self.assertEqual('${SERVER_PORT:8084}', config['server.port'])
+        self.assertEqual('CHATBOT-SERVICE', config['eureka.instance.appname'])
+        self.assertEqual('chatbot-service', config['logitrack.security.audience'])
+        self.assertEqual('${JWT_PUBLIC_KEY_LOCATION}', config['logitrack.security.public-key-location'])
+        self.assertEqual('${AI_API_KEY}', config['spring.ai.openai.api-key'])
+        self.assertEqual('${AI_MODEL}', config['spring.ai.openai.chat.options.model'])
+        self.assertIn('prometheus', config['management.endpoints.web.exposure.include'])
+        self.assertFalse(any('datasource' in key or 'private-key' in key or 'admin' in key for key in config))
+
     def test_gateway_has_base_configuration_for_mandatory_bootstrap(self):
         config = properties(ROOT/'api-gateway.properties')
         self.assertEqual('api-gateway', config['spring.application.name'])
