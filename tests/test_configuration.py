@@ -149,5 +149,34 @@ class ConfigurationContractTest(unittest.TestCase):
         self.assertEqual('lb://SHIPMENT-SERVICE', config[prefix+'[4].uri'])
         self.assertFalse(any(key.startswith('spring.cloud.gateway.routes') for key in config))
 
+    def test_sprint4_profile_properties_contract(self):
+        # 1. Configuración centralizada de Spring Cloud Config para sprint4
+        app_sprint4 = properties(ROOT / 'application-sprint4.properties')
+        self.assertEqual('true', app_sprint4['management.metrics.distribution.percentiles-histogram.http.server.requests'])
+
+        # 2. Configuración específica por servicio para sprint4
+        all_services = (*SERVICES, 'api-gateway', 'chatbot-service')
+        for service in all_services:
+            path = ROOT / f'{service}-sprint4.properties'
+            self.assertTrue(path.exists(), f'Falta archivo {path.name}')
+            config = properties(path)
+            self.assertEqual('true', config.get('management.metrics.distribution.percentiles-histogram.http.server.requests'),
+                             f'Falta habilitar histogramas percentiles en {path.name}')
+            # No exponer endpoints sensibles ni fijar puertos en propiedades
+            self.assertFalse(any(k in config for k in ('server.port', 'management.server.port', 'management.server.address')),
+                             f'{path.name} no debe fijar puertos estáticos de gestión')
+            if 'management.endpoints.web.exposure.include' in config:
+                exposure = config['management.endpoints.web.exposure.include']
+                for forbidden in ('env', 'beans', 'shutdown', 'gateway'):
+                    self.assertNotIn(forbidden, exposure)
+
+    def test_gateway_sprint4_exposure_keeps_gateway_endpoint_disabled(self):
+        gateway_base = properties(ROOT / 'api-gateway.properties')
+        exposure = gateway_base['management.endpoints.web.exposure.include'].split(',')
+        self.assertNotIn('gateway', exposure)
+        self.assertEqual('none', gateway_base['management.endpoint.gateway.access'])
+        self.assertIn('health', exposure)
+        self.assertIn('prometheus', exposure)
+
 if __name__ == "__main__":
     unittest.main()
