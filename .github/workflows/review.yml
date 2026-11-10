@@ -1,4 +1,4 @@
-name: Revisión IA y estados Sprint 2
+name: Revisión IA y estados
 on:
   issues:
     types: [opened, edited, reopened, closed]
@@ -46,4 +46,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || github.token }}
           PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
-          PROJECT_NUMBER: '2'
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+          PROJECT_ISSUE_LABEL: ${{ vars.PROJECT_ISSUE_LABEL }}

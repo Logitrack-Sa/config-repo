@@ -169,11 +169,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         console.log('Etiquetas actualizadas. El flujo normal del tablero usa automatizaciones nativas; /review status solo mueve tarjetas si se configura PROJECT_TOKEN.');
       } else {
         try {
-          const projects = new ProjectSync(new GitHub({ token: process.env.PROJECT_TOKEN }), process.env.PROJECT_NUMBER || '2');
+          const projects = new ProjectSync(new GitHub({ token: process.env.PROJECT_TOKEN }), process.env.PROJECT_NUMBER);
           for (const number of github.changedStatuses) {
             const item = await github.get(`/issues/${number}`);
             // El tablero muestra tareas, no duplica PR como tarjetas de trabajo.
-            if (!item.pull_request && item.labels.some(l => l.name === 'sprint:2')) await projects.sync(item);
+            if (!item.pull_request && process.env.PROJECT_ISSUE_LABEL && item.labels.some(l => l.name === process.env.PROJECT_ISSUE_LABEL)) await projects.sync(item);
           }
           console.log('GitHub Projects sincronizado.');
         } catch { console.error('No se pudo sincronizar GitHub Projects; revisar permiso del PROJECT_TOKEN.'); process.exitCode = 1; }
