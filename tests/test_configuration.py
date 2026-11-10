@@ -48,15 +48,15 @@ class ConfigurationContractTest(unittest.TestCase):
             self.assertFalse(any(key.startswith('spring.datasource') for key in config))
             self.assertEqual('health', config['management.endpoints.web.exposure.include'])
 
-    def test_sprint3_discovery_preserves_the_sprint2_profiles(self):
+    def test_discovery_preserves_dev_and_prod_profiles(self):
         for service in (*SERVICES, 'api-gateway'):
-            config = properties(ROOT/f'{service}-sprint3.properties')
+            config = properties(ROOT/f'{service}-discovery.properties')
             self.assertEqual('true', config['eureka.client.enabled'])
             self.assertEqual('true', config['eureka.client.register-with-eureka'])
             self.assertEqual('${EUREKA_SERVER_URL}',
                              config['eureka.client.service-url.defaultZone'])
             self.assertEqual('${SERVICE_HOST}', config['eureka.instance.hostname'])
-        config = merged('shipment-service', 'prod') | properties(ROOT/'shipment-service-sprint3.properties')
+        config = merged('shipment-service', 'prod') | properties(ROOT/'shipment-service-discovery.properties')
         self.assertEqual('', config['logitrack.courier.base-url'])
         self.assertEqual('courier-service', config['logitrack.courier.service-id'])
 
@@ -138,7 +138,7 @@ class ConfigurationContractTest(unittest.TestCase):
         self.assertIn("localhost:8065", dev_config["eureka.client.service-url.defaultZone"])
         prod_config = merged("api-gateway", "prod")
         self.assertIn("eureka-server:8065", prod_config["eureka.client.service-url.defaultZone"])
-        self.assertIn("https://logitrack.com", prod_config["logitrack.gateway.cors.allowed-origins"])
+        self.assertEqual("${CORS_ALLOWED_ORIGINS}", prod_config["logitrack.gateway.cors.allowed-origins"])
 
     def test_gateway_routes_keep_the_three_service_contracts(self):
         config = properties(ROOT/'api-gateway.properties')
@@ -149,15 +149,15 @@ class ConfigurationContractTest(unittest.TestCase):
         self.assertEqual('lb://SHIPMENT-SERVICE', config[prefix+'[4].uri'])
         self.assertFalse(any(key.startswith('spring.cloud.gateway.routes') for key in config))
 
-    def test_sprint4_profile_properties_contract(self):
-        # 1. Configuración centralizada de Spring Cloud Config para sprint4
-        app_sprint4 = properties(ROOT / 'application-sprint4.properties')
-        self.assertEqual('true', app_sprint4['management.metrics.distribution.percentiles-histogram.http.server.requests'])
+    def test_observability_profile_properties_contract(self):
+        # 1. Configuración centralizada de Spring Cloud Config para observability
+        app_observability = properties(ROOT / 'application-observability.properties')
+        self.assertEqual('true', app_observability['management.metrics.distribution.percentiles-histogram.http.server.requests'])
 
-        # 2. Configuración específica por servicio para sprint4
+        # 2. Configuración específica por servicio para observability
         all_services = (*SERVICES, 'api-gateway', 'chatbot-service')
         for service in all_services:
-            path = ROOT / f'{service}-sprint4.properties'
+            path = ROOT / f'{service}-observability.properties'
             self.assertTrue(path.exists(), f'Falta archivo {path.name}')
             config = properties(path)
             self.assertEqual('true', config.get('management.metrics.distribution.percentiles-histogram.http.server.requests'),
@@ -170,7 +170,7 @@ class ConfigurationContractTest(unittest.TestCase):
                 for forbidden in ('env', 'beans', 'shutdown', 'gateway'):
                     self.assertNotIn(forbidden, exposure)
 
-    def test_gateway_sprint4_exposure_keeps_gateway_endpoint_disabled(self):
+    def test_gateway_observability_exposure_keeps_gateway_endpoint_disabled(self):
         gateway_base = properties(ROOT / 'api-gateway.properties')
         exposure = gateway_base['management.endpoints.web.exposure.include'].split(',')
         self.assertNotIn('gateway', exposure)

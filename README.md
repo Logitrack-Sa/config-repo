@@ -4,19 +4,19 @@
 
 `eureka-server.properties` y sus perfiles dev/prod configuran el registro standalone
 en 8065, sin autorregistro ni base de datos (#79). Los cuatro clientes agregan
-el perfil `sprint3`: usar `SPRING_PROFILES_ACTIVE=prod,sprint3` en Compose.
+el perfil `discovery`: usar `SPRING_PROFILES_ACTIVE=prod,discovery` en Compose.
 Los perfiles dev/prod del Sprint 2 conservan sus contratos.
 
 `EUREKA_SERVER_URL=http://eureka-server:8065/eureka/` identifica el registro;
 `SERVICE_HOST` anuncia el DNS del propio contenedor. No anunciar localhost dentro
-de Docker. Ambas variables son obligatorias en sprint3: no hay fallback a
+de Docker. Ambas variables son obligatorias en discovery: no hay fallback a
 localhost que oculte un despliegue incompleto. Las claves JWT y las bases siguen perteneciendo a cada servicio.
 
-El perfil shipment-sprint3 deja vacia `logitrack.courier.base-url` para que el
+El perfil shipment-discovery deja vacia `logitrack.courier.base-url` para que el
 cliente Feign de #84 resuelva `courier-service` con Eureka y LoadBalancer.
 No es una URL de fallback: mantenerla vacia evita puentear el descubrimiento.
 La base api-gateway.properties permite la consulta inicial del perfil default
-que realiza Config Client antes de cargar sprint3. Define identidad, puerto y
+que realiza Config Client antes de cargar discovery. Define identidad, puerto y
 salud sin detalles internos. Sus archivos solo aportan bootstrap y registro; las rutas/JWT/CORS corresponden
 a las issues #81-#83 y a su responsable.
 
